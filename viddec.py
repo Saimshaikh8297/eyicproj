@@ -16,7 +16,7 @@ from utils import label_map_util
 from utils import visualization_utils as vis_util
 
 bikemode = False
-print(bikemode)
+
 PATH_TO_CKPT = 'faster_rcnn_resnet50_coco_2017_11_08/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('data', 'mscoco_label_map.pbtxt')
 NUM_CLASSES = 90
@@ -70,6 +70,3 @@ def detect_vehicle():
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     cv2.destroyAllWindows()
                     break
-
-
-detect_vehicle()

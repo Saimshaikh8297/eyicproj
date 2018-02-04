@@ -95,7 +95,8 @@ def encode_image_array_as_png_str(image):
   return png_string
 
 
-def draw_bounding_box_on_image_array(sess,
+def draw_bounding_box_on_image_array(bikemode,
+                                     sess,
                                      fheight,
                                      image_np,
                                      image,
@@ -124,13 +125,14 @@ def draw_bounding_box_on_image_array(sess,
       coordinates as absolute.
   """
   image_pil = Image.fromarray(np.uint8(image)).convert('RGB')
-  draw_bounding_box_on_image(sess,fheight,image_np,image_pil, ymin, xmin, ymax, xmax, color,
+  draw_bounding_box_on_image(bikemode,sess,fheight,image_np,image_pil, ymin, xmin, ymax, xmax, color,
                              thickness, display_str_list,
                              use_normalized_coordinates)
   np.copyto(image, np.array(image_pil))
 
 
-def draw_bounding_box_on_image(sess,
+def draw_bounding_box_on_image(bikemode,
+                               sess,
                                fheight,
                                image_np,
                                image,
@@ -142,8 +144,7 @@ def draw_bounding_box_on_image(sess,
                                thickness=4,
                                display_str_list=(),
                                use_normalized_coordinates=True):
-  # fheight, fwidth = image.shape[:2]
-  # cv2.line(image, (0, int(fheight / 2)), (fwidth, int(fheight / 2)), (0, 255, 0), 1)
+
   """Adds a bounding box to an image.
 
   Each string in display_str_list is displayed on a separate line above the
@@ -178,55 +179,87 @@ def draw_bounding_box_on_image(sess,
     (left, right, top, bottom) = (xmin, xmax, ymin, ymax)
   for display_str in display_str_list[::-1]:
       if any(c in display_str for c in arr):
-          if "motorcycle" in display_str:
-              draw.line([(left, top-100), (left, bottom), (right, bottom),
-                         (right, top-100), (left, top-100)], width=thickness, fill=color)
-              rwidth = right - left
-              rheight = bottom - (top-100)
-              cx = int(rwidth / 2)
-              cy = int(rheight / 2)
-              cv2.circle(image_np, (cx, cy), 10, (0, 0, 255), -1)
-              len1 = int(top + cy)
-              len2 = int(1 * fheight / 2)
-              len3 = len2 + 5
-              if ((len1 >= len2) and (len1 <= len3)):
-                  roi = tf.image.crop_to_bounding_box(image_np, int(top-100), int(left), int(rheight), int(rwidth))
-                  print("Bike Found")
-                  cnt += 1
-                  imgdata = sess.run(roi)
-                  if not os.path.exists(path2):
-                      os.makedirs(path2)
+          if bikemode==False:
+              if "motorcycle" in display_str:
+                  draw.line([(left, top - 100), (left, bottom), (right, bottom),
+                             (right, top - 100), (left, top - 100)], width=thickness, fill=color)
+                  rwidth = right - left
+                  rheight = bottom - (top - 100)
+                  cx = int(rwidth / 2)
+                  cy = int(rheight / 2)
+                  cv2.circle(image_np, (cx, cy), 10, (0, 0, 255), -1)
+                  len1 = int(top + cy)
+                  len2 = int(1 * fheight / 2)
+                  len3 = len2 + 5
+                  if ((len1 >= len2) and (len1 <= len3)):
+                      roi = tf.image.crop_to_bounding_box(image_np, int(top - 100), int(left), int(rheight),
+                                                          int(rwidth))
+                      print("Bike Found")
+                      cnt += 1
+                      imgdata = sess.run(roi)
+                      if not os.path.exists(path2):
+                          os.makedirs(path2)
+                      else:
+                          cv2.imwrite(os.path.join(path2, 'bikeimage' + str(int(cnt))) + '.jpg', imgdata)
+
+                      if len(glob.glob(path2 + '\\*')) >= 4:
+                          himg.detect_helmet()
+                          print("Hi")
+
+                      print("Bike Written")
+              else:
+                  draw.line([(left, top), (left, bottom), (right, bottom),
+                             (right, top), (left, top)], width=thickness, fill=color)
+                  rwidth = right - left
+                  rheight = bottom - top
+                  cx = int(rwidth / 2)
+                  cy = int(rheight / 2)
+                  cv2.circle(image_np, (cx, cy), 10, (0, 0, 255), -1)
+                  len1 = int(top + cy)
+                  len2 = int(1 * fheight / 2)
+                  len3 = len2 + 5
+                  if ((len1 >= len2) and (len1 <= len3)):
+
+                      roi = tf.image.crop_to_bounding_box(image_np, int(top), int(left), int(rheight), int(rwidth))
+                      print("CAR FOUND1")
+                      cnt += 1
+                      imgdata = sess.run(roi)
+                      if not os.path.exists(path2):
+                          os.makedirs(path2)
+                      else:
+                          cv2.imwrite(os.path.join(path2, 'carimage' + str(int(cnt))) + '.jpg', imgdata)
+
+                      print("IMAGE FOUND2")
                   else:
-                      cv2.imwrite(os.path.join(path2, 'bikeimage' + str(int(cnt))) + '.jpg', imgdata)
+                      if "motorcycle" in display_str:
+                          draw.line([(left, top - 100), (left, bottom), (right, bottom),
+                                     (right, top - 100), (left, top - 100)], width=thickness, fill=color)
+                          rwidth = right - left
+                          rheight = bottom - (top - 100)
+                          cx = int(rwidth / 2)
+                          cy = int(rheight / 2)
+                          cv2.circle(image_np, (cx, cy), 10, (0, 0, 255), -1)
+                          len1 = int(top + cy)
+                          len2 = int(1 * fheight / 2)
+                          len3 = len2 + 5
+                          if ((len1 >= len2) and (len1 <= len3)):
+                              roi = tf.image.crop_to_bounding_box(image_np, int(top - 100), int(left), int(rheight),
+                                                                  int(rwidth))
+                              print("Bike Found")
+                              cnt += 1
+                              imgdata = sess.run(roi)
+                              if not os.path.exists(path2):
+                                  os.makedirs(path2)
+                              else:
+                                  cv2.imwrite(os.path.join(path2, 'bikeimage' + str(int(cnt))) + '.jpg', imgdata)
 
-                  if len(glob.glob(path2+'\\*')) >= 4:
-                      himg.detect_helmet()
-                      print("Hi")
+                              if len(glob.glob(path2 + '\\*')) >= 4:
+                                  himg.detect_helmet()
+                                  print("Hi")
 
-                  print("Bike Written")
-          else:
-              draw.line([(left, top), (left, bottom), (right, bottom),
-                         (right, top), (left, top)], width=thickness, fill=color)
-              rwidth = right - left
-              rheight = bottom - top
-              cx = int(rwidth / 2)
-              cy = int(rheight / 2)
-              cv2.circle(image_np, (cx, cy), 10, (0, 0, 255), -1)
-              len1 = int(top + cy)
-              len2 = int(1 * fheight / 2)
-              len3 = len2 + 5
-              if ((len1 >= len2) and (len1 <= len3)):
+                              print("Bike Written")
 
-                  roi = tf.image.crop_to_bounding_box(image_np, int(top), int(left), int(rheight), int(rwidth))
-                  print("CAR FOUND1")
-                  cnt += 1
-                  imgdata = sess.run(roi)
-                  if not os.path.exists(path2):
-                      os.makedirs(path2)
-                  else:
-                      cv2.imwrite(os.path.join(path2, 'carimage' + str(int(cnt))) + '.jpg', imgdata)
 
-                  print("IMAGE FOUND2")
   try:
     font = ImageFont.truetype('arial.ttf', 24)
   except IOError:
@@ -555,6 +588,7 @@ def visualize_boxes_and_labels_on_image_array(bikemode,
           color=color
       )
     draw_bounding_box_on_image_array(
+        bikemode,
         sess,
         fheight,
         image_np,
